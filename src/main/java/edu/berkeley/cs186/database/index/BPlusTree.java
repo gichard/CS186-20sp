@@ -137,6 +137,17 @@ public class BPlusTree {
     public Optional<RecordId> get(DataBox key) {
         typecheck(key);
         // TODO(proj2): implement
+        LeafNode p = root.get(key);
+        List<DataBox> keys = p.getKeys();
+        List<RecordId> rids = p.getRids();
+        for (int i = 0; i < keys.size(); i++) {
+            DataBox k = keys.get(i);
+            if (k.equals(key)) {
+                return Optional.of(rids.get(i));
+            } else if (k.compareTo(key) < 0) {
+                break;
+            }
+        }
         // TODO(proj4_part3): B+ tree locking
 
         return Optional.empty();
@@ -238,6 +249,7 @@ public class BPlusTree {
     public void put(DataBox key, RecordId rid) {
         typecheck(key);
         // TODO(proj2): implement
+        this.root.put(key, rid);
         // TODO(proj4_part3): B+ tree locking
 
         return;
@@ -262,6 +274,7 @@ public class BPlusTree {
      */
     public void bulkLoad(Iterator<Pair<DataBox, RecordId>> data, float fillFactor) {
         // TODO(proj2): implement
+        this.root.bulkLoad(data, fillFactor);
         // TODO(proj4_part3): B+ tree locking
 
         return;
@@ -281,6 +294,7 @@ public class BPlusTree {
     public void remove(DataBox key) {
         typecheck(key);
         // TODO(proj2): implement
+        this.root.remove(key);
         // TODO(proj4_part3): B+ tree locking
 
         return;
