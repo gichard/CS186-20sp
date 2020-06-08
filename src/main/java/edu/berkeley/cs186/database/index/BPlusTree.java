@@ -144,7 +144,7 @@ public class BPlusTree {
             DataBox k = keys.get(i);
             if (k.equals(key)) {
                 return Optional.of(rids.get(i));
-            } else if (k.compareTo(key) < 0) {
+            } else if (k.compareTo(key) > 0) {
                 break;
             }
         }
@@ -250,6 +250,13 @@ public class BPlusTree {
         typecheck(key);
         // TODO(proj2): implement
         Optional<Pair<DataBox, Long>> res = this.root.put(key, rid);
+        update(res);
+        // TODO(proj4_part3): B+ tree locking
+
+        return;
+    }
+
+    private void update(Optional<Pair<DataBox, Long>> res) {
         if (!res.equals(Optional.empty())) { // need a new root
             DataBox newKey = res.get().getFirst();
             Long newChild = res.get().getSecond();
@@ -261,9 +268,6 @@ public class BPlusTree {
             InnerNode newRoot = new InnerNode(metadata, bufferManager, nKeys, nCd, lockContext);
             updateRoot(newRoot);
         }
-        // TODO(proj4_part3): B+ tree locking
-
-        return;
     }
 
     /**
@@ -285,7 +289,10 @@ public class BPlusTree {
      */
     public void bulkLoad(Iterator<Pair<DataBox, RecordId>> data, float fillFactor) {
         // TODO(proj2): implement
-        this.root.bulkLoad(data, fillFactor);
+        while (data.hasNext()) {
+            Optional<Pair<DataBox, Long>> res = this.root.bulkLoad(data, fillFactor);
+            update(res);
+        }
         // TODO(proj4_part3): B+ tree locking
 
         return;

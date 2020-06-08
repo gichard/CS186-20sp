@@ -100,6 +100,10 @@ class InnerNode extends BPlusNode {
         int cind = numLessThanEqual(key, this.keys);
         BPlusNode cNode = getChild(cind);
         Optional<Pair<DataBox, Long>> res = cNode.put(key, rid);
+        return update(res);
+    }
+
+    private Optional<Pair<DataBox, Long>> update(Optional<Pair<DataBox, Long>> res) {
         if (!res.equals(Optional.empty())) {
             DataBox newKey = res.get().getFirst();
             Long newChild = res.get().getSecond();
@@ -132,7 +136,14 @@ class InnerNode extends BPlusNode {
     public Optional<Pair<DataBox, Long>> bulkLoad(Iterator<Pair<DataBox, RecordId>> data,
             float fillFactor) {
         // TODO(proj2): implement
-
+        while (data.hasNext()) {
+            BPlusNode rChild = getChild(this.children.size() - 1);
+            Optional<Pair<DataBox, Long>> res = rChild.bulkLoad(data, fillFactor);
+            res = update(res);
+            if (!res.equals(Optional.empty())) {
+                return res;
+            }
+        }
         return Optional.empty();
     }
 
