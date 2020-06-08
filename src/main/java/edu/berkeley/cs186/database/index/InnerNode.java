@@ -97,12 +97,13 @@ class InnerNode extends BPlusNode {
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
         // TODO(proj2): implement
-        int ind = numLessThanEqual(key, this.keys);
-        BPlusNode cNode = getChild(ind);
+        int cind = numLessThanEqual(key, this.keys);
+        BPlusNode cNode = getChild(cind);
         Optional<Pair<DataBox, Long>> res = cNode.put(key, rid);
         if (!res.equals(Optional.empty())) {
             DataBox newKey = res.get().getFirst();
             Long newChild = res.get().getSecond();
+            int ind = numLessThanEqual(newKey, this.keys);
             int order = metadata.getOrder();
             if ((ind == 0 && !this.keys.get(ind).equals(newKey)) || !this.keys.get(ind - 1).equals(newKey)) {
                 if (this.keys.size() < order * 2) { // do not split
@@ -110,13 +111,14 @@ class InnerNode extends BPlusNode {
                     this.children.add(ind + 1, newChild);
                 } else {
                     List<DataBox> newKeyList = this.keys.subList(0, 2 * order);
-                    List<Long> newChildrenList = this.children.subList(0, 2 * order);
+                    List<Long> newChildrenList = this.children.subList(0, 2 * order + 1);
                     newKeyList.add(ind, newKey);
                     newChildrenList.add(ind + 1, newChild);
                     this.keys = newKeyList.subList(0, order);
-                    this.children = newChildrenList.subList(0, order);
+                    this.children = newChildrenList.subList(0, order + 1);
                     InnerNode newNode = new InnerNode(metadata, bufferManager, newKeyList.subList(order + 1, 2 * order + 1),
-                            newChildrenList.subList(order, 2 * order + 1), treeContext);
+                            newChildrenList.subList(order + 1, 2 * order + 2), treeContext);
+                    sync();
                     return Optional.of(new Pair<>(newKeyList.get(order), newNode.getPage().getPageNum()));
                 }
                 sync();

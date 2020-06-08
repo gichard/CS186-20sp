@@ -249,7 +249,18 @@ public class BPlusTree {
     public void put(DataBox key, RecordId rid) {
         typecheck(key);
         // TODO(proj2): implement
-        this.root.put(key, rid);
+        Optional<Pair<DataBox, Long>> res = this.root.put(key, rid);
+        if (!res.equals(Optional.empty())) { // need a new root
+            DataBox newKey = res.get().getFirst();
+            Long newChild = res.get().getSecond();
+            List<DataBox> nKeys = new ArrayList<>();
+            nKeys.add(newKey);
+            List<Long> nCd = new ArrayList<>();
+            nCd.add(root.getPage().getPageNum());
+            nCd.add(newChild);
+            InnerNode newRoot = new InnerNode(metadata, bufferManager, nKeys, nCd, lockContext);
+            updateRoot(newRoot);
+        }
         // TODO(proj4_part3): B+ tree locking
 
         return;
