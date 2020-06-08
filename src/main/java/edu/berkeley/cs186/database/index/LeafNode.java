@@ -442,6 +442,11 @@ class LeafNode extends BPlusNode {
         return new LeafNode(metadata, bufferManager, page,  keys, rids, rightSb, treeContext);
     }
 
+    // helper method
+    public boolean hasRightSib() {
+        return this.rightSibling.isPresent();
+    }
+
     // Builtins //////////////////////////////////////////////////////////////////
     @Override
     public boolean equals(Object o) {

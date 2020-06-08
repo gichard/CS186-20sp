@@ -201,9 +201,10 @@ public class BPlusTree {
      */
     public Iterator<RecordId> scanAll() {
         // TODO(proj2): Return a BPlusTreeIterator.
+        return new BPlusTreeIterator(root);
         // TODO(proj4_part3): B+ tree locking
 
-        return Collections.emptyIterator();
+//        return Collections.emptyIterator();
     }
 
     /**
@@ -232,9 +233,11 @@ public class BPlusTree {
     public Iterator<RecordId> scanGreaterEqual(DataBox key) {
         typecheck(key);
         // TODO(proj2): Return a BPlusTreeIterator.
+
+        return new BPlusTreeIterator(root, key);
         // TODO(proj4_part3): B+ tree locking
 
-        return Collections.emptyIterator();
+//        return Collections.emptyIterator();
     }
 
     /**
@@ -417,19 +420,42 @@ public class BPlusTree {
     // Iterator ////////////////////////////////////////////////////////////////
     private class BPlusTreeIterator implements Iterator<RecordId> {
         // TODO(proj2): Add whatever fields and constructors you want here.
+        private LeafNode start;
+        private Iterator<RecordId> pageIter;
+
+        public BPlusTreeIterator(BPlusNode iRoot) {
+            start = iRoot.getLeftmostLeaf();
+            pageIter = start.getRids().iterator();
+        }
+
+        public BPlusTreeIterator(BPlusNode iRoot, DataBox key) {
+            LeafNode p = root.get(key);
+            List<DataBox> keys = p.getKeys();
+            start = iRoot.getLeftmostLeaf();
+            for (int i = 0; i < keys.size(); i++) {
+                if (key.compareTo(keys.get(i)) < 0) {
+                    pageIter = start.getRids().listIterator(i);
+                }
+            }
+        }
 
         @Override
         public boolean hasNext() {
             // TODO(proj2): implement
 
-            return false;
+            return pageIter.hasNext() || start.hasRightSib();
         }
 
         @Override
         public RecordId next() {
             // TODO(proj2): implement
 
-            throw new NoSuchElementException();
+//            throw new NoSuchElementException();
+            if (!pageIter.hasNext()) {
+                start = start.getRightSibling().get();
+                pageIter = start.getRids().iterator();
+            }
+            return pageIter.next();
         }
     }
 }
