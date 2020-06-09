@@ -260,7 +260,7 @@ public class BPlusTree {
     }
 
     private void update(Optional<Pair<DataBox, Long>> res) {
-        if (!res.equals(Optional.empty())) { // need a new root
+        if (res.isPresent()) { // need a new root
             DataBox newKey = res.get().getFirst();
             Long newChild = res.get().getSecond();
             List<DataBox> nKeys = new ArrayList<>();
@@ -431,10 +431,11 @@ public class BPlusTree {
         public BPlusTreeIterator(BPlusNode iRoot, DataBox key) {
             LeafNode p = root.get(key);
             List<DataBox> keys = p.getKeys();
-            start = iRoot.getLeftmostLeaf();
+            start = p;
             for (int i = 0; i < keys.size(); i++) {
-                if (key.compareTo(keys.get(i)) < 0) {
+                if (key.compareTo(keys.get(i)) <= 0) {
                     pageIter = start.getRids().listIterator(i);
+                    break;
                 }
             }
         }
@@ -450,10 +451,14 @@ public class BPlusTree {
         public RecordId next() {
             // TODO(proj2): implement
 
-//            throw new NoSuchElementException();
             if (!pageIter.hasNext()) {
-                start = start.getRightSibling().get();
-                pageIter = start.getRids().iterator();
+                Optional<LeafNode> sib = start.getRightSibling();
+                if (!sib.isPresent()) {
+                    throw new NoSuchElementException();
+                } else {
+                    start = sib.get();
+                    pageIter = start.getRids().listIterator();
+                }
             }
             return pageIter.next();
         }

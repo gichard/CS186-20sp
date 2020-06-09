@@ -444,7 +444,7 @@ class LeafNode extends BPlusNode {
 
     // helper method
     public boolean hasRightSib() {
-        return this.rightSibling.isPresent();
+        return this.rightSibling.isPresent() && this.rightSibling.get() >= 0;
     }
 
     // Builtins //////////////////////////////////////////////////////////////////

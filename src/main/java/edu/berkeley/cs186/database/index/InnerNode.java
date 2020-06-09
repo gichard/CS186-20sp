@@ -104,7 +104,7 @@ class InnerNode extends BPlusNode {
     }
 
     private Optional<Pair<DataBox, Long>> update(Optional<Pair<DataBox, Long>> res) {
-        if (!res.equals(Optional.empty())) {
+        if (res.isPresent()) {
             DataBox newKey = res.get().getFirst();
             Long newChild = res.get().getSecond();
             int ind = numLessThanEqual(newKey, this.keys);
@@ -140,7 +140,7 @@ class InnerNode extends BPlusNode {
             BPlusNode rChild = getChild(this.children.size() - 1);
             Optional<Pair<DataBox, Long>> res = rChild.bulkLoad(data, fillFactor);
             res = update(res);
-            if (!res.equals(Optional.empty())) {
+            if (res.isPresent()) {
                 return res;
             }
         }
