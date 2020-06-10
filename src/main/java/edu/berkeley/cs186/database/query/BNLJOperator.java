@@ -136,6 +136,7 @@ class BNLJOperator extends JoinOperator {
                 } else if (this.rightIterator.hasNext()) {
                     fetchNextRightPage();
                     this.leftRecordIterator.reset();
+                    this.leftRecord = leftRecordIterator.next();
                 } else {
                     fetchNextLeftBlock();
                     if (this.leftRecordIterator == null) {
