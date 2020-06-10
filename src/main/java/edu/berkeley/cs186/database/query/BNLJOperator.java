@@ -89,6 +89,14 @@ class BNLJOperator extends JoinOperator {
          */
         private void fetchNextLeftBlock() {
             // TODO(proj3_part1): implement
+            if (!leftIterator.hasNext()) {
+                leftRecordIterator = null;
+                leftRecord = null;
+            } else {
+                leftRecordIterator = getBlockIterator(getLeftTableName(), leftIterator, numBuffers - 2);
+                leftRecord = leftRecordIterator.hasNext() ? leftRecordIterator.next() : null;
+                leftRecordIterator.markPrev();
+            }
         }
 
         /**
@@ -101,6 +109,12 @@ class BNLJOperator extends JoinOperator {
          */
         private void fetchNextRightPage() {
             // TODO(proj3_part1): implement
+            if (!rightIterator.hasNext()) {
+                rightRecordIterator = null;
+            } else {
+                rightRecordIterator = getBlockIterator(getRightTableName(), rightIterator, 1);
+                rightRecordIterator.markNext();
+            }
         }
 
         /**
@@ -111,6 +125,50 @@ class BNLJOperator extends JoinOperator {
          */
         private void fetchNextRecord() {
             // TODO(proj3_part1): implement
+//            if (this.nextRecord == null) {
+//                throw new NoSuchElementException("No new record to fetch");
+//            }
+            this.nextRecord = null;
+
+            while (!hasNext()) {
+                if (this.leftRecord != null) {
+                    fetchNextRecordLoaded();
+                } else if (this.rightIterator.hasNext()) {
+                    fetchNextRightPage();
+                    this.leftRecordIterator.reset();
+                } else {
+                    fetchNextLeftBlock();
+                    if (this.leftRecordIterator == null) {
+                        throw new NoSuchElementException("No new record to fetch");
+                    }
+                    this.rightIterator.reset();
+                    fetchNextRightPage();
+                }
+            }
+        }
+
+        /*
+        * Search for next record in loaded left block and right page. Set next record when found
+        */
+        private void fetchNextRecordLoaded() {
+            Record rightRecord;
+            while (this.leftRecord != null) {
+                rightRecord = this.rightRecordIterator.hasNext() ? this.rightRecordIterator.next() : null;
+                if (rightRecord == null) {
+                    rightRecordIterator.reset();
+                    this.leftRecord = leftRecordIterator.hasNext() ? leftRecordIterator.next() : null;
+                } else {
+                    DataBox leftJoinValue = this.leftRecord.getValues().get(BNLJOperator.this.getLeftColumnIndex());
+                    DataBox rightJoinValue = rightRecord.getValues().get(BNLJOperator.this.getRightColumnIndex());
+                    if (leftJoinValue.equals(rightJoinValue)) {
+                        List<DataBox> leftValues = new ArrayList<>(this.leftRecord.getValues());
+                        List<DataBox> rightValues = new ArrayList<>(rightRecord.getValues());
+                        leftValues.addAll(rightValues);
+                        this.nextRecord = new Record(leftValues);
+                        return;
+                    }
+                }
+            }
         }
 
         /**
