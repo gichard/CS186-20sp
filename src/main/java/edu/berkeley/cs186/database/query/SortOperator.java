@@ -74,16 +74,15 @@ public class SortOperator {
         // TODO(proj3_part1): implement
         List<Record> recs = new ArrayList<>();
 
-        Iterator<Record> r = run.iterator();
-        while (r.hasNext()) {
-            recs.add(r.next());
+        for (Record r : run) {
+            recs.add(r);
         }
         recs.sort(this.comparator);
 
         Run sortedRun = new IntermediateRun();
         sortedRun.addRecords(recs);
-
         return sortedRun;
+
     }
 
     /**
@@ -145,10 +144,12 @@ public class SortOperator {
         // TODO(proj3_part1): implement
         BacktrackingIterator<Page> pages = this.transaction.getPageIterator(this.tableName);
         List<Run> runs = new ArrayList<>();
+        // pass 0, load pages to buffer and sort buffer
         while (pages.hasNext()) {
-            Run pRun = createRunFromIterator(this.transaction.getBlockIterator(this.tableName, pages, 1));
+            Run pRun = createRunFromIterator(this.transaction.getBlockIterator(this.tableName, pages, this.numBuffers));
             runs.add(sortRun(pRun));
         }
+        // merge until all sorted
         while (runs.size() > 1) {
             runs = mergePass(runs);
         }
