@@ -327,6 +327,14 @@ public class GraceHashJoin {
         ArrayList<Record> rightRecords = new ArrayList<>();
 
         // TODO(proj3_part1): populate leftRecords and rightRecords such that NHJ breaks but not GHJ
+        int pageSize = 976;
+        int buffers = 6;
+        // fill 4 * pageSize + 1 records of the same value in leftRecords
+        for (int i = 0; i < (buffers - 2) * pageSize + 1; i++) {
+            leftRecords.add(createRecord(1));
+        }
+        // rightRecords can fit into B - 2 buffers after hashing
+        rightRecords.add(createRecord(2));
 
         return new Pair<>(leftRecords, rightRecords);
     }
@@ -352,6 +360,16 @@ public class GraceHashJoin {
         ArrayList<Record> rightRecords = new ArrayList<>();
 
         // TODO(proj3_part1): populate leftRecords and rightRecords such that GHJ breaks
+        int pageSize = 976;
+        int buffers = 6;
+        // key skew for both eft and right Records
+        for (int i = 0; i < (buffers - 2) * pageSize + 1; i++) {
+            leftRecords.add(createRecord(1));
+        }
+
+        for (int i = 0; i < (buffers - 2) * pageSize + 1; i++) {
+            rightRecords.add(createRecord(1));
+        }
 
         return new Pair<>(leftRecords, rightRecords);
     }
