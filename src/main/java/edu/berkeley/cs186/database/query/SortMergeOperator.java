@@ -94,17 +94,17 @@ class SortMergeOperator extends JoinOperator {
          * It causes this.fetchNextRecord (the caller) to hand control to its caller.
          */
         private void nextLeftRecord() {
-            if (!leftIterator.hasNext()) { throw new NoSuchElementException("All Done!"); }
-            leftRecord = leftIterator.next();
+            if (!leftIterator.hasNext() && nextRecord == null) { throw new NoSuchElementException("All Done!"); }
+            leftRecord = leftIterator.hasNext() ? leftIterator.next() : null;
         }
 
         private void nextRightRecord() {
-            if (!rightIterator.hasNext()) { throw new NoSuchElementException("All Done!"); }
-            rightRecord = rightIterator.next();
+            if (!rightIterator.hasNext() && nextRecord == null) { throw new NoSuchElementException("All Done!"); }
+            rightRecord = rightIterator.hasNext() ? rightIterator.next() : null;
         }
 
         private int compareLR(Record leftRecord, Record rightRecord) {
-            DataBox leftJoinValue = this.leftRecord.getValues().get(SortMergeOperator.this.getLeftColumnIndex());
+            DataBox leftJoinValue = leftRecord.getValues().get(SortMergeOperator.this.getLeftColumnIndex());
             DataBox rightJoinValue = rightRecord.getValues().get(SortMergeOperator.this.getRightColumnIndex());
             return leftJoinValue.compareTo(rightJoinValue);
         }
@@ -128,15 +128,21 @@ class SortMergeOperator extends JoinOperator {
                     rightIterator.markPrev();
                 }
                 if (compareLR(leftRecord, rightRecord) == 0) {
-                    List<DataBox> leftValues = new ArrayList<>(this.leftRecord.getValues());
+                    List<DataBox> leftValues = new ArrayList<>(leftRecord.getValues());
                     List<DataBox> rightValues = new ArrayList<>(rightRecord.getValues());
                     leftValues.addAll(rightValues);
                     this.nextRecord = new Record(leftValues);
                     nextRightRecord();
+                    if (rightRecord == null) { // get to the end of right table
+                        rightIterator.reset();
+                        rightRecord = rightIterator.next();
+                        nextLeftRecord();
+                    }
                     return;
                 } else {
                     rightIterator.reset();
                     rightRecord = rightIterator.next();
+                    nextLeftRecord();
                     marked = false;
                 }
             }
